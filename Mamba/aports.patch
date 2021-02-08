@@ -1,0 +1,350 @@
+diff --git a/main/curl/APKBUILD b/main/curl/APKBUILD
+index 78ef795b2f..d0ecbbcce1 100644
+--- a/main/curl/APKBUILD
++++ b/main/curl/APKBUILD
+@@ -9,8 +9,9 @@ pkgdesc="URL retrival utility and library"
+ url="https://curl.haxx.se/"
+ arch="all"
+ license="MIT"
++options="!check"
+ depends="ca-certificates"
+-depends_dev="openssl-dev nghttp2-dev zlib-dev brotli-dev"
++depends_dev="openssl-dev nghttp2-dev zlib-dev"
+ checkdepends="nghttp2 python3"
+ makedepends_host="$depends_dev"
+ makedepends_build="autoconf automake groff libtool perl"
+@@ -113,6 +114,7 @@ build() {
+ 		--with-nghttp2 \
+ 		--disable-ldap \
+ 		--with-pic \
++		--without-brotli \
+ 		--without-libssh2 # https://bugs.alpinelinux.org/issues/10222
+ 	make
+ }
+diff --git a/main/libarchive/APKBUILD b/main/libarchive/APKBUILD
+index c508d79c42..d953d9f7d5 100644
+--- a/main/libarchive/APKBUILD
++++ b/main/libarchive/APKBUILD
+@@ -7,7 +7,7 @@ pkgdesc="library that can create and read several streaming archive formats"
+ url="https://libarchive.org/"
+ arch="all"
+ license="BSD-2-Clause AND BSD-3-Clause AND Public-Domain"
+-makedepends="zlib-dev bzip2-dev xz-dev lz4-dev acl-dev openssl-dev expat-dev
++makedepends="zlib-dev bzip2-dev xz-dev lz4-dev openssl-dev expat-dev
+ 	attr-dev zstd-dev"
+ subpackages="$pkgname-static $pkgname-dev $pkgname-doc $pkgname-tools"
+ source="https://github.com/libarchive/libarchive/releases/download/$pkgver/libarchive-$pkgver.tar.xz"
+@@ -26,6 +26,7 @@ build() {
+ 		--build=$CBUILD \
+ 		--host=$CHOST \
+ 		--prefix=/usr \
++		--disable-acl \
+ 		--without-xml2
+ 	make
+ }
+diff --git a/main/libuv/APKBUILD b/main/libuv/APKBUILD
+index b3f2b1b5ef..ea15f3e861 100644
+--- a/main/libuv/APKBUILD
++++ b/main/libuv/APKBUILD
+@@ -8,6 +8,7 @@ pkgdesc="Cross-platform asychronous I/O"
+ url="https://libuv.org/"
+ arch="all"
+ license="MIT AND ISC"
++options="!check"
+ makedepends_build="automake autoconf libtool"
+ makedepends_host="linux-headers"
+ subpackages="$pkgname-static $pkgname-dev $pkgname-dbg"
+diff --git a/main/linux-headers/APKBUILD b/main/linux-headers/APKBUILD
+index 24f05f5cbe..ca896037cc 100644
+--- a/main/linux-headers/APKBUILD
++++ b/main/linux-headers/APKBUILD
+@@ -1,7 +1,7 @@
+ # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+ pkgname=linux-headers
+-pkgver=5.7.8
+-_kernver=${pkgver%.*}
++pkgver=3.10.108
++_kernver=${pkgver}
+ pkgrel=0
+ pkgdesc="Linux system headers"
+ url="http://kernel.org"
+@@ -9,21 +9,13 @@ arch="all"
+ license="GPL-2.0-only"
+ makedepends="perl rsync"
+ options="!check !dbg !strip !tracedeps"
+-source="https://kernel.org/pub/linux/kernel/v5.x/linux-$_kernver.tar.xz
+-	https://kernel.org/pub/linux/kernel/v5.x/patch-$pkgver.xz
+-	revert-broken-uapi.patch
++source="https://kernel.org/pub/linux/kernel/v3.x/linux-$_kernver.tar.xz
++	linux-3.10.108.patch
+ 	0003-remove-inclusion-of-sysinfo.h-in-kernel.h.patch
+ 	include-uapi-linux-swab-Fix-potentially-missing-__always_inline.patch
+ 	"
+ builddir="$srcdir/linux-$_kernver"
+ 
+-prepare() {
+-	if [ "$_kernver" != "$pkgver" ]; then
+-		unxz -c < "$srcdir"/patch-$pkgver.xz | patch -p1
+-	fi
+-	default_prepare
+-}
+-
+ package() {
+ 	local _carch=$CARCH
+ 
+@@ -46,8 +38,7 @@ package() {
+ 	rm -rf "$pkgdir"/usr/include/drm
+ }
+ 
+-sha512sums="45bde01593f6147c8c169b9e46b4b56eee998142552ae0ff82f1dd21b1fd54f3b32f6283f6bd77ea717d374672167849e468c157f235d2f12f7d7816e4623bf6  linux-5.7.tar.xz
+-4820a45fba9fa299181a96598a96bbdbf6f5faaf1862173d9cca3cc5ea84c21d8e7d4baf0601697565fad3b7d3c76085f4ac86a726961b62c356d70968edc48f  patch-5.7.8.xz
+-32597f2672d1ec365a936d15041a7cf219ef9353241d4a5c378244cf2fc155610443a19bbcd391c86099a0b08486c45e042ec7c90b0d04fe675c3ad0ffc36b53  revert-broken-uapi.patch
++sha512sums="2ed1bda124fbc0f03e7f4c4e5ddac73d15b82d24ff51f5dbb265cec7cc614b28f83923b5fc8df5e97a3244d2bbb861853f0f2a3894a0c64c5a08b489d4ae12ac  linux-3.10.108.tar.xz
++f349ec7d6f4c70dd9d485b054554996e8774538e17314a59f4580de6832cff8d6bfd8bd9eaed322e5d876eeb7842c7d791962a52cb2e9a68086e754e7ddc0c80  linux-3.10.108.patch
+ 302283b1b5f560c850e24aad73febcf7f906ed62b4cad2d826bf140ffe59191631f3cd4ac29525c349cdfe61aba6a47886a0d76f1c6a4a16b744d59b94ea5df8  0003-remove-inclusion-of-sysinfo.h-in-kernel.h.patch
+-7cfa786144009c52d682e307bb512156e4812d7abe03b3fed99651a02d80567d47ee6f347f88d083c1b9805e0c09625fc3df08a8d0ae96b169d24eb5b83917b7  include-uapi-linux-swab-Fix-potentially-missing-__always_inline.patch"
++e2622617c7e2a94b32e4754cecddeaae5fc2ed00478de86d145d5be3bcad1481b44a4298d1f8357a7e83a14af89ef816e12822c0b03f09ab0f6c77c5eabfa952  include-uapi-linux-swab-Fix-potentially-missing-__always_inline.patch"
+diff --git a/main/linux-headers/include-uapi-linux-swab-Fix-potentially-missing-__always_inline.patch b/main/linux-headers/include-uapi-linux-swab-Fix-potentially-missing-__always_inline.patch
+index 3ef4477ac5..b17919e495 100644
+--- a/main/linux-headers/include-uapi-linux-swab-Fix-potentially-missing-__always_inline.patch
++++ b/main/linux-headers/include-uapi-linux-swab-Fix-potentially-missing-__always_inline.patch
+@@ -47,9 +47,9 @@ index 7272f85d6d6a..3736f2fe1541 100644
+  #include <linux/types.h>
+ -#include <linux/compiler.h>
+ +#include <linux/stddef.h>
+- #include <asm/bitsperlong.h>
+  #include <asm/swab.h>
+  
++ /*
+ -- 
+ 2.27.0
+ 
+diff --git a/main/linux-headers/linux-3.10.108.patch b/main/linux-headers/linux-3.10.108.patch
+new file mode 100644
+index 0000000000..2a8fa43bd6
+--- /dev/null
++++ b/main/linux-headers/linux-3.10.108.patch
+@@ -0,0 +1,190 @@
++diff -ru a/arch/x86/tools/relocs.c b/arch/x86/tools/relocs.c
++--- a/arch/x86/tools/relocs.c	2017-11-04 18:34:48.000000000 -0400
+++++ b/arch/x86/tools/relocs.c	2021-01-24 17:02:42.920202456 -0500
++@@ -695,7 +695,7 @@
++  *
++  */
++ static int per_cpu_shndx	= -1;
++-Elf_Addr per_cpu_load_addr;
+++static Elf_Addr per_cpu_load_addr;
++ 
++ static void percpu_init(void)
++ {
++diff -ru a/tools/include/tools/be_byteshift.h b/tools/include/tools/be_byteshift.h
++--- a/tools/include/tools/be_byteshift.h	2017-11-04 18:34:48.000000000 -0400
+++++ b/tools/include/tools/be_byteshift.h	2021-01-24 17:02:22.627697314 -0500
++@@ -1,68 +1,68 @@
++ #ifndef _TOOLS_BE_BYTESHIFT_H
++ #define _TOOLS_BE_BYTESHIFT_H
++ 
++-#include <linux/types.h>
+++#include <stdint.h>
++ 
++-static inline __u16 __get_unaligned_be16(const __u8 *p)
+++static inline uint16_t __get_unaligned_be16(const uint8_t *p)
++ {
++ 	return p[0] << 8 | p[1];
++ }
++ 
++-static inline __u32 __get_unaligned_be32(const __u8 *p)
+++static inline uint32_t __get_unaligned_be32(const uint8_t *p)
++ {
++ 	return p[0] << 24 | p[1] << 16 | p[2] << 8 | p[3];
++ }
++ 
++-static inline __u64 __get_unaligned_be64(const __u8 *p)
+++static inline uint64_t __get_unaligned_be64(const uint8_t *p)
++ {
++-	return (__u64)__get_unaligned_be32(p) << 32 |
+++	return (uint64_t)__get_unaligned_be32(p) << 32 |
++ 	       __get_unaligned_be32(p + 4);
++ }
++ 
++-static inline void __put_unaligned_be16(__u16 val, __u8 *p)
+++static inline void __put_unaligned_be16(uint16_t val, uint8_t *p)
++ {
++ 	*p++ = val >> 8;
++ 	*p++ = val;
++ }
++ 
++-static inline void __put_unaligned_be32(__u32 val, __u8 *p)
+++static inline void __put_unaligned_be32(uint32_t val, uint8_t *p)
++ {
++ 	__put_unaligned_be16(val >> 16, p);
++ 	__put_unaligned_be16(val, p + 2);
++ }
++ 
++-static inline void __put_unaligned_be64(__u64 val, __u8 *p)
+++static inline void __put_unaligned_be64(uint64_t val, uint8_t *p)
++ {
++ 	__put_unaligned_be32(val >> 32, p);
++ 	__put_unaligned_be32(val, p + 4);
++ }
++ 
++-static inline __u16 get_unaligned_be16(const void *p)
+++static inline uint16_t get_unaligned_be16(const void *p)
++ {
++-	return __get_unaligned_be16((const __u8 *)p);
+++	return __get_unaligned_be16((const uint8_t *)p);
++ }
++ 
++-static inline __u32 get_unaligned_be32(const void *p)
+++static inline uint32_t get_unaligned_be32(const void *p)
++ {
++-	return __get_unaligned_be32((const __u8 *)p);
+++	return __get_unaligned_be32((const uint8_t *)p);
++ }
++ 
++-static inline __u64 get_unaligned_be64(const void *p)
+++static inline uint64_t get_unaligned_be64(const void *p)
++ {
++-	return __get_unaligned_be64((const __u8 *)p);
+++	return __get_unaligned_be64((const uint8_t *)p);
++ }
++ 
++-static inline void put_unaligned_be16(__u16 val, void *p)
+++static inline void put_unaligned_be16(uint16_t val, void *p)
++ {
++ 	__put_unaligned_be16(val, p);
++ }
++ 
++-static inline void put_unaligned_be32(__u32 val, void *p)
+++static inline void put_unaligned_be32(uint32_t val, void *p)
++ {
++ 	__put_unaligned_be32(val, p);
++ }
++ 
++-static inline void put_unaligned_be64(__u64 val, void *p)
+++static inline void put_unaligned_be64(uint64_t val, void *p)
++ {
++ 	__put_unaligned_be64(val, p);
++ }
++diff -ru a/tools/include/tools/le_byteshift.h b/tools/include/tools/le_byteshift.h
++--- a/tools/include/tools/le_byteshift.h	2017-11-04 18:34:48.000000000 -0400
+++++ b/tools/include/tools/le_byteshift.h	2021-01-24 17:02:22.627697314 -0500
++@@ -1,68 +1,68 @@
++ #ifndef _TOOLS_LE_BYTESHIFT_H
++ #define _TOOLS_LE_BYTESHIFT_H
++ 
++-#include <linux/types.h>
+++#include <stdint.h>
++ 
++-static inline __u16 __get_unaligned_le16(const __u8 *p)
+++static inline uint16_t __get_unaligned_le16(const uint8_t *p)
++ {
++ 	return p[0] | p[1] << 8;
++ }
++ 
++-static inline __u32 __get_unaligned_le32(const __u8 *p)
+++static inline uint32_t __get_unaligned_le32(const uint8_t *p)
++ {
++ 	return p[0] | p[1] << 8 | p[2] << 16 | p[3] << 24;
++ }
++ 
++-static inline __u64 __get_unaligned_le64(const __u8 *p)
+++static inline uint64_t __get_unaligned_le64(const uint8_t *p)
++ {
++-	return (__u64)__get_unaligned_le32(p + 4) << 32 |
+++	return (uint64_t)__get_unaligned_le32(p + 4) << 32 |
++ 	       __get_unaligned_le32(p);
++ }
++ 
++-static inline void __put_unaligned_le16(__u16 val, __u8 *p)
+++static inline void __put_unaligned_le16(uint16_t val, uint8_t *p)
++ {
++ 	*p++ = val;
++ 	*p++ = val >> 8;
++ }
++ 
++-static inline void __put_unaligned_le32(__u32 val, __u8 *p)
+++static inline void __put_unaligned_le32(uint32_t val, uint8_t *p)
++ {
++ 	__put_unaligned_le16(val >> 16, p + 2);
++ 	__put_unaligned_le16(val, p);
++ }
++ 
++-static inline void __put_unaligned_le64(__u64 val, __u8 *p)
+++static inline void __put_unaligned_le64(uint64_t val, uint8_t *p)
++ {
++ 	__put_unaligned_le32(val >> 32, p + 4);
++ 	__put_unaligned_le32(val, p);
++ }
++ 
++-static inline __u16 get_unaligned_le16(const void *p)
+++static inline uint16_t get_unaligned_le16(const void *p)
++ {
++-	return __get_unaligned_le16((const __u8 *)p);
+++	return __get_unaligned_le16((const uint8_t *)p);
++ }
++ 
++-static inline __u32 get_unaligned_le32(const void *p)
+++static inline uint32_t get_unaligned_le32(const void *p)
++ {
++-	return __get_unaligned_le32((const __u8 *)p);
+++	return __get_unaligned_le32((const uint8_t *)p);
++ }
++ 
++-static inline __u64 get_unaligned_le64(const void *p)
+++static inline uint64_t get_unaligned_le64(const void *p)
++ {
++-	return __get_unaligned_le64((const __u8 *)p);
+++	return __get_unaligned_le64((const uint8_t *)p);
++ }
++ 
++-static inline void put_unaligned_le16(__u16 val, void *p)
+++static inline void put_unaligned_le16(uint16_t val, void *p)
++ {
++ 	__put_unaligned_le16(val, p);
++ }
++ 
++-static inline void put_unaligned_le32(__u32 val, void *p)
+++static inline void put_unaligned_le32(uint32_t val, void *p)
++ {
++ 	__put_unaligned_le32(val, p);
++ }
++ 
++-static inline void put_unaligned_le64(__u64 val, void *p)
+++static inline void put_unaligned_le64(uint64_t val, void *p)
++ {
++ 	__put_unaligned_le64(val, p);
++ }
+diff --git a/main/perl/APKBUILD b/main/perl/APKBUILD
+index d4d7f715c1..3f9d7f5192 100644
+--- a/main/perl/APKBUILD
++++ b/main/perl/APKBUILD
+@@ -8,7 +8,7 @@ pkgdesc="Larry Wall's Practical Extraction and Report Language"
+ url="https://www.perl.org/"
+ arch="all"
+ license="Artistic-Perl OR GPL-1.0-or-later"
+-options="!fhs"
++options="!fhs !check"
+ depends_dev="perl-utils"
+ makedepends="bzip2-dev zlib-dev"
+ subpackages="$pkgname-doc $pkgname-dev $pkgname-utils::noarch miniperl"
+diff --git a/main/python3/APKBUILD b/main/python3/APKBUILD
+index e8e6cb11b9..9134653751 100644
+--- a/main/python3/APKBUILD
++++ b/main/python3/APKBUILD
+@@ -56,6 +56,7 @@ prepare() {
+ 
+ build() {
+ 	# -Os overwrites --enable-optimizations
++	export CFLAGS="${CFLAGS/-flto /-flto -ffat-lto-objects }"
+ 	export CFLAGS="${CFLAGS/-Os/} -fno-semantic-interposition"
+ 
+ 	# Include bluez headers. Python only needs bluetooth/bluetoot.h and doesn't
+@@ -122,6 +123,7 @@ EOF
+ 	fail="$fail test_multiprocessing_main_handling"		# fails on x86_64
+ 	fail="$fail test_runpy"					# fails on x86_64
+ 	fail="$fail test_threading"				# hangs on all arches (except x86_64?)
++	fail="$fail test_nntplib"				# fails because of external server change
+ 
+ 	# kernel related
+ 	fail="$fail test_fcntl"					# wants DNOTIFY, we don't have it

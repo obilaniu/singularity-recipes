@@ -1,0 +1,213 @@
+diff -x '*.o' -x Singularity -x 'Lua.*' -ru a/src/linit.c b/src/linit.c
+--- a/src/linit.c	2020-11-13 10:32:01.000000000 -0500
++++ b/src/linit.c	2021-02-02 05:23:08.126555342 -0500
+@@ -34,6 +34,40 @@
+ #include "lualib.h"
+ #include "lauxlib.h"
+ 
++#if COMPILING_INTERPRETER
++int luaopen_lfs (lua_State *L);
++int luaopen_lpeg (lua_State *L);
++int luaopen_posix_ctype (lua_State *L);
++int luaopen_posix_dirent (lua_State *L);
++int luaopen_posix_errno (lua_State *L);
++int luaopen_posix_fcntl (lua_State *L);
++int luaopen_posix_fnmatch (lua_State *L);
++int luaopen_posix_glob (lua_State *L);
++int luaopen_posix_grp (lua_State *L);
++int luaopen_posix_libgen (lua_State *L);
++int luaopen_posix_poll (lua_State *L);
++int luaopen_posix_pwd (lua_State *L);
++int luaopen_posix_sched (lua_State *L);
++int luaopen_posix_signal (lua_State *L);
++int luaopen_posix_stdio (lua_State *L);
++int luaopen_posix_stdlib (lua_State *L);
++int luaopen_posix_sys_msg (lua_State *L);
++int luaopen_posix_sys_resource (lua_State *L);
++int luaopen_posix_sys_socket (lua_State *L);
++int luaopen_posix_sys_stat (lua_State *L);
++int luaopen_posix_sys_statvfs (lua_State *L);
++int luaopen_posix_sys_time (lua_State *L);
++int luaopen_posix_sys_times (lua_State *L);
++int luaopen_posix_sys_utsname (lua_State *L);
++int luaopen_posix_sys_wait (lua_State *L);
++int luaopen_posix_syslog (lua_State *L);
++int luaopen_posix_termio (lua_State *L);
++int luaopen_posix_time (lua_State *L);
++int luaopen_posix_unistd (lua_State *L);
++int luaopen_posix_utime (lua_State *L);
++int luaopen_term_core (lua_State *L);
++#endif
++
+ 
+ /*
+ ** these libs are loaded by lua.c and are readily available to any Lua
+@@ -50,6 +84,39 @@
+   {LUA_MATHLIBNAME, luaopen_math},
+   {LUA_UTF8LIBNAME, luaopen_utf8},
+   {LUA_DBLIBNAME, luaopen_debug},
++#if COMPILING_INTERPRETER
++  {"lfs",                luaopen_lfs},
++  {"lpeg",               luaopen_lpeg},
++  {"posix.ctype",        luaopen_posix_ctype},
++  {"posix.dirent",       luaopen_posix_dirent},
++  {"posix.errno",        luaopen_posix_errno},
++  {"posix.fcntl",        luaopen_posix_fcntl},
++  {"posix.fnmatch",      luaopen_posix_fnmatch},
++  {"posix.glob",         luaopen_posix_glob},
++  {"posix.grp",          luaopen_posix_grp},
++  {"posix.libgen",       luaopen_posix_libgen},
++  {"posix.poll",         luaopen_posix_poll},
++  {"posix.pwd",          luaopen_posix_pwd},
++  {"posix.sched",        luaopen_posix_sched},
++  {"posix.signal",       luaopen_posix_signal},
++  {"posix.stdio",        luaopen_posix_stdio},
++  {"posix.stdlib",       luaopen_posix_stdlib},
++  {"posix.sys.msg",      luaopen_posix_sys_msg},
++  {"posix.sys.resource", luaopen_posix_sys_resource},
++  {"posix.sys.socket",   luaopen_posix_sys_socket},
++  {"posix.sys.stat",     luaopen_posix_sys_stat},
++  {"posix.sys.statvfs",  luaopen_posix_sys_statvfs},
++  {"posix.sys.time",     luaopen_posix_sys_time},
++  {"posix.sys.times",    luaopen_posix_sys_times},
++  {"posix.sys.utsname",  luaopen_posix_sys_utsname},
++  {"posix.sys.wait",     luaopen_posix_sys_wait},
++  {"posix.syslog",       luaopen_posix_syslog},
++  {"posix.termio",       luaopen_posix_termio},
++  {"posix.time",         luaopen_posix_time},
++  {"posix.unistd",       luaopen_posix_unistd},
++  {"posix.utime",        luaopen_posix_utime},
++  {"term.core",          luaopen_term_core},
++#endif
+   {NULL, NULL}
+ };
+ 
+diff -x '*.o' -x Singularity -x 'Lua.*' -ru a/src/loadlib.c b/src/loadlib.c
+--- a/src/loadlib.c	2020-11-13 10:32:01.000000000 -0500
++++ b/src/loadlib.c	2021-02-02 05:21:53.463728383 -0500
+@@ -539,6 +539,40 @@
+                           lua_tostring(L, 1), filename, lua_tostring(L, -1));
+ }
+ 
++static int searcher_static_Lua_bc (lua_State *L) {
++  const char *name = luaL_checkstring(L, 1);
++  #if COMPILING_INTERPRETER
++  # define tryloadhardcode(L, name_scored, str_name, extra)                   \
++    if(strcmp(name, str_name) == 0){                                          \
++      extra;                                                                  \
++      extern const char _binary_##name_scored##_start[];                      \
++      extern const char _binary_##name_scored##_end[];                        \
++      return checkload(L, (luaL_loadbuffer(L, _binary_##name_scored##_start,  \
++                                              _binary_##name_scored##_end -   \
++                                              _binary_##name_scored##_start,  \
++                                               name) == LUA_OK),              \
++                       ":hardcoded::" str_name);                              \
++    }
++  tryloadhardcode(L, posix_init,       "posix", label_posix_init:);
++  tryloadhardcode(L, posix__base,      "posix._base",);
++  tryloadhardcode(L, posix__bitwise,   "posix._bitwise",);
++  tryloadhardcode(L, posix__strict,    "posix._strict",);
++  tryloadhardcode(L, posix_compat,     "posix.compat",);
++  tryloadhardcode(L, posix_deprecated, "posix.deprecated",);
++  tryloadhardcode(L, posix_sys,        "posix.sys",);
++  tryloadhardcode(L, posix_util,       "posix.util",);
++  tryloadhardcode(L, posix_version,    "posix.version",);
++  tryloadhardcode(L, re,               "re",);
++  tryloadhardcode(L, term_init,        "term",  label_term_init:);
++  tryloadhardcode(L, term_colors,      "term.colors",);
++  tryloadhardcode(L, term_cursor,      "term.cursor",);
++  if(strcmp(name, "posix.init") == 0) goto label_posix_init;
++  if(strcmp(name, "term.init") == 0)  goto label_term_init;
++  # undef tryloadhardcode
++  #endif
++  lua_pushfstring(L, "no :hardcoded: package '%s'", name);
++  return 1; /* module not found baked statically. */
++}
+ 
+ static int searcher_Lua (lua_State *L) {
+   const char *filename;
+@@ -706,7 +740,7 @@
+ 
+ static void createsearcherstable (lua_State *L) {
+   static const lua_CFunction searchers[] =
+-    {searcher_preload, searcher_Lua, searcher_C, searcher_Croot, NULL};
++    {searcher_preload, searcher_static_Lua_bc, searcher_Lua, searcher_C, searcher_Croot, NULL};
+   int i;
+   /* create 'searchers' table */
+   lua_createtable(L, sizeof(searchers)/sizeof(searchers[0]) - 1, 0);
+diff -x '*.o' -x Singularity -x 'Lua.*' -ru a/src/Makefile b/src/Makefile
+--- a/src/Makefile	2020-11-10 13:39:37.000000000 -0500
++++ b/src/Makefile	2021-02-03 02:56:27.249957381 -0500
+@@ -34,18 +34,28 @@
+ 
+ LUA_A=	liblua.a
+ CORE_O=	lapi.o lcode.o lctype.o ldebug.o ldo.o ldump.o lfunc.o lgc.o llex.o lmem.o lobject.o lopcodes.o lparser.o lstate.o lstring.o ltable.o ltm.o lundump.o lvm.o lzio.o
+-LIB_O=	lauxlib.o lbaselib.o lcorolib.o ldblib.o liolib.o lmathlib.o loadlib.o loslib.o lstrlib.o ltablib.o lutf8lib.o linit.o
++LIB_BASE_O=	lauxlib.o lbaselib.o lcorolib.o ldblib.o liolib.o lmathlib.o loslib.o lstrlib.o ltablib.o lutf8lib.o
++LIB_O=  loadlib.o linit.o $(LIB_BASE_O)
+ BASE_O= $(CORE_O) $(LIB_O) $(MYOBJS)
+ 
++LUA_INTERP_A=liblua_interp.a
++BYTE_O= lbytecode.o
++LFS_O=  lfs.o
++LPEG_O= lpcap.o lpcode.o lpprint.o lptree.o lpvm.o
++POSIX_O=luaposix/posix/posix.o
++TERM_O= core.o
++LIB_INTERP_O=loadlib_interp.o linit_interp.o $(LIB_BASE_O) $(BYTE_O) $(LFS_O) $(LPEG_O) $(POSIX_O) $(TERM_O)
++BASE_INTERP_O= $(CORE_O) $(LIB_INTERP_O) $(MYOBJS)
++
+ LUA_T=	lua
+ LUA_O=	lua.o
+ 
+ LUAC_T=	luac
+ LUAC_O=	luac.o
+ 
+-ALL_O= $(BASE_O) $(LUA_O) $(LUAC_O)
+-ALL_T= $(LUA_A) $(LUA_T) $(LUAC_T)
+-ALL_A= $(LUA_A)
++ALL_O= $(BASE_O) $(BASE_INTERP_O) $(LUA_O) $(LUAC_O)
++ALL_T= $(LUA_A) $(LUA_INTERP_A) $(LUA_T) $(LUAC_T)
++ALL_A= $(LUA_A) $(LUA_INTERP_A)
+ 
+ # Targets start here.
+ default: $(PLAT)
+@@ -60,12 +70,24 @@
+ 	$(AR) $@ $(BASE_O)
+ 	$(RANLIB) $@
+ 
+-$(LUA_T): $(LUA_O) $(LUA_A)
+-	$(CC) -o $@ $(LDFLAGS) $(LUA_O) $(LUA_A) $(LIBS)
++$(LUA_INTERP_A): $(BASE_INTERP_O)
++	$(AR) $@ $(BASE_INTERP_O)
++	$(RANLIB) $@
++
++$(LUA_T): $(LUA_O) $(LUA_INTERP_A)
++	$(CC) -o $@ $(LDFLAGS) $(LUA_O) $(LUA_INTERP_A) $(LIBS)
+ 
+ $(LUAC_T): $(LUAC_O) $(LUA_A)
+ 	$(CC) -o $@ $(LDFLAGS) $(LUAC_O) $(LUA_A) $(LIBS)
+ 
++luaposix/posix/posix.o: luaposix/posix/posix.c
++	$(CC) $(CFLAGS) -DPACKAGE=\"luaposix\" -DVERSION=\"v35.0\" -DPOSIX_C_SOURCE=200809L -D_XOPEN_SOURCE=700 \
++	                -DHAVE_POSIX_FADVISE -DHAVE_SCHED_H -DHAVE_SCHED_GETSCHEDULER -DHAVE_SCHED_SETSCHEDULER \
++	                -DHAVE_SYS_MSG_H -DHAVE_MSGRCV -DHAVE_MSGSND -DHAVE_NET_IF_H -DHAVE_LINUX_NETLINK_H \
++	                -DHAVE_STATVFS -DHAVE_CRYPT -DHAVE_CRYPT_H -DHAVE_DECL_FDATASYNC -DHAVE_FDATASYNC \
++	                -DHAVE_GETHOSTID -Wno-unused-variable -Wno-unused-function -Wno-address \
++	                -Iluaposix/include -I. -c -o $@ $<
++
+ test:
+ 	./lua -v
+ 
+@@ -151,6 +173,12 @@
+ lcode.o:
+ 	$(CC) $(CFLAGS) $(CMCFLAGS) -c lcode.c
+ 
++loadlib_interp.o:
++	$(CC) $(CFLAGS) -DCOMPILING_INTERPRETER=1 -c loadlib.c -o loadlib_interp.o
++
++linit_interp.o:
++	$(CC) $(CFLAGS) -DCOMPILING_INTERPRETER=1 -c linit.c   -o linit_interp.o
++
+ # DO NOT DELETE
+ 
+ lapi.o: lapi.c lprefix.h lua.h luaconf.h lapi.h llimits.h lstate.h \

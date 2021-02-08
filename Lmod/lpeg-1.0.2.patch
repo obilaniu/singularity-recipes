@@ -1,0 +1,21 @@
+--- a/lpcode.c
++++ b/lpcode.c
+@@ -359,6 +359,7 @@
+       }
+       /* else go through */
+     }
++    /* Else falls through. */
+     case TBehind: {  /* instruction gives no new information */
+       /* call 'getfirst' only to check for math-time captures */
+       int e = getfirst(sib1(tree), follow, firstset);
+--- a/lpvm.c
++++ b/lpvm.c
+@@ -287,7 +287,7 @@
+       case IFailTwice:
+         assert(stack > getstackbase(L, ptop));
+         stack--;
+-        /* go through */
++        /* falls through */
+       case IFail:
+       fail: { /* pattern failed: try to backtrack */
+         do {  /* remove pending calls */
