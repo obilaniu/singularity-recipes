@@ -128,7 +128,7 @@ env -u LD_LIBRARY_PATH -u LD_PRELOAD \
             --with-lua="${LUA_ROOT}/lua${LUA_MVER}.${UNAMEM}" \
             --with-luac="${LUA_ROOT}/luac${LUA_MVER}.${UNAMEM}" \
             --with-tcl=no \
-            --with-module-root-path="" \
+            --without-module-root-path \
             --with-ModulePathInit="${LMOD_CONFIG_PREFIX}/modulespath.${UNAMEM}" \
             --with-shortTime=3600 \
             --with-availExtensions=yes \

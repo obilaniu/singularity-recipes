@@ -46,7 +46,7 @@ git clone https://github.com/TACC/Lmod.git                           Lmod
 #
 if [ -f lpeg-${LPEG_VER}.patch ]; then
   pushd lpeg && patch -p1 < /opt/lpeg-${LPEG_VER}.patch && popd
-  rm /opt/lpeg-*.patch
+  rm lpeg-${LPEG_VER}.patch
 fi
 
 
@@ -74,7 +74,7 @@ Stage: final
 
 
 %files from download
-/opt/* /opt
+/opt /
 
 
 %post

@@ -18,19 +18,18 @@ make clean
 popd
 
 
+
+
 #
 # Use the "clean" Luac to compile .lua files to stripped bytecode.
 #
 mkdir -p bytecode/{posix,term}
-
 pushd lpeg && luac -s -o /opt/bytecode/re re.lua && popd
-
 pushd luaposix/lib/posix
 for f in *.lua; do
     luac -s -o /opt/bytecode/posix/"${f%.lua}" "$f"
 done
 popd
-
 pushd Lmod/pkgs/term/term
 for f in *.lua; do
     luac -s -o /opt/bytecode/term/"${f%.lua}" "$f"
@@ -106,7 +105,7 @@ if [ -f /opt/lua-${LUA_VER}.patch ]; then
     patch -p1 < /opt/lua-${LUA_VER}.patch
     rm /opt/lua-*.patch
 fi
-make MYCFLAGS='-I. -ULUA_COMPAT_5_3 -DLUA_PATH_DEFAULT="\"./?.lua;./?/init.lua\"" -DLUA_CPATH_DEFAULT="\"./?.so\"" -no-pie -Os -flto -fomit-frame-pointer -march=x86-64 -mtune=znver2' \
+make MYCFLAGS='-I. -ULUA_COMPAT_5_3 -DLUA_PATH_DEFAULT="\"./?.lua;./?/init.lua\"" -DLUA_CPATH_DEFAULT="\"./?.so\"" -no-pie -Os -flto -fomit-frame-pointer @LMOD_CFLAGS@' \
      MYLDFLAGS='-static-libgcc -static -no-pie' \
      PLAT=posix
 make INSTALL_TOP=/usr install

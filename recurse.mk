@@ -1,6 +1,6 @@
 TOPTARGETS  := all clean
 SINGULARITY ?= singularity
-RECIPES     ?= $(filter-out %.in,$(wildcard Singularity.*))
+RECIPES     ?= $(patsubst Singularity.%.in,Singularity.%,$(wildcard Singularity.*))
 IMAGES      := $(patsubst Singularity.%,%.sif,$(RECIPES))
 SUBDIRS     ?= $(patsubst %/Makefile,%,$(wildcard */Makefile))
 
