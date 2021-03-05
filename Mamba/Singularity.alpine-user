@@ -3,7 +3,7 @@ From: alpine-bareuser.sif
 Stage: initdev
 
 
-%post -c bash -ex
+%post
 	# As a zeroth-priority item, Singularity mounts / as nosuid, and this causes problems.
 	# Remount with options allowing suid.
 	mount -o remount,suid /
@@ -61,6 +61,6 @@ Stage: basedev
 /home/dev/packages
 
 
-%post -c bash -ex
+%post
 	# Chown dev's home back. Apparently Singularity's %files copy doesn't preserve ownership?
 	chown -R dev:dev /home/dev/

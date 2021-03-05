@@ -7,7 +7,7 @@ Stage: ltodeps
 aports.patch /opt/
 
 
-%post -c bash -ex
+%post
 	# As a zeroth-priority item, Singularity mounts / as nosuid, and this causes problems.
 	# Remount with options allowing suid.
 	mount -o remount,suid /
@@ -15,7 +15,7 @@ aports.patch /opt/
 	
 	# Install the SDK, using the LTOed packages in /home/dev/packages, and some
 	# common build tools:
-	apk add alpine-sdk git autoconf automake groff libtool grep file # linux-headers=3.10.108-r0
+	apk add alpine-sdk git autoconf automake groff libtool grep file
 	
 	
 	# For a speedup and extra compression, the base image does not have a Git branch
@@ -67,6 +67,6 @@ Stage: depsready
 /home/dev/packages/* /home/dev/packages
 
 
-%post -c bash -ex
+%post
 	# Chown dev's home back. Apparently Singularity's %files copy doesn't preserve ownership?
 	chown -R dev:dev /home/dev/packages/

@@ -10,6 +10,9 @@ Stage: bareuser
 	# sudo must be installed before /etc/sudoers is modified, otherwise
 	# root ends up not being registered as a sudoer!
 	apk add sudo bash
+	sed -i -e 's|/bin/ash|/bin/bash|g' /etc/passwd
+	ln -sf /bin/bash /bin/sh
+	rm -rf /root/.ash_history
 	
 	
 	# Begin creating setup for building packages as recommended in
